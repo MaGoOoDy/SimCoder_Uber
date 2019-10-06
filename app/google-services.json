@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "447450013947",
+    "firebase_url": "https://trainingubersimcoder.firebaseio.com",
+    "project_id": "trainingubersimcoder",
+    "storage_bucket": "trainingubersimcoder.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:447450013947:android:5a823c756037136b",
+        "android_client_info": {
+          "package_name": "com.example.android.ubersimcoder"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "447450013947-lb4ng22aiv3e97g3gfdbbk3ervtuf1uj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android.ubersimcoder",
+            "certificate_hash": "4c4f900b71824e5faf92ba379e5afbca34ea95e8"
+          }
+        },
+        {
+          "client_id": "447450013947-icaafg3047ckjpst69oaanms571fehmq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZOnt3JoFRK_0Z144HbqPnv6Fi_GNCDS0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "447450013947-icaafg3047ckjpst69oaanms571fehmq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
