@@ -81,7 +81,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
 
     // vars 2
-    private Button mLogout,mRequestRide;
+    private Button mLogout,mRequestRide, mSettings;
     private LatLng pickupLocation;
     private int radius = 1;
     private boolean driverFound = false;
@@ -123,6 +123,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
         // initiate the vars
         mLogout = findViewById(R.id.logout);
+        mSettings = findViewById(R.id.settings);
         mRequestRide = findViewById(R.id.CallDriver);
 
 
@@ -214,6 +215,19 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
             }
         });
+
+
+        mSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(RiderMapActivity.this, RiderSettingsActivity.class);
+                startActivity(intent);
+                // remember we will not finish the (RiderMapActivity) because we need to (RiderSettingsActivity) to show on the top of the (RiderMapActivity)
+                return;
+            }
+        });
+
+
 
     }
 
