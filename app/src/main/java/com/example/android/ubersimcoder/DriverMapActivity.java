@@ -13,6 +13,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -21,6 +24,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
+import com.bumptech.glide.Glide;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.android.gms.common.ConnectionResult;
@@ -46,6 +50,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
+import java.util.Map;
 
 public class DriverMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -73,6 +78,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     // vars 2
     private Button mLogout;
+    private LinearLayout mRiderInfo;
+    private ImageView mRiderPrfileImage;
+    private TextView mRiderName;
+    private TextView mRiderPhone;
     private Boolean currentLogoutDriverStatus = false;
     private String driverID;
     private String riderId = "";
@@ -102,6 +111,11 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         // initiate the vars
         mLogout = findViewById(R.id.logout);
+        mRiderInfo = findViewById(R.id.riderInfo);
+        mRiderPrfileImage = findViewById(R.id.riderProfileImage);
+        mRiderName = findViewById(R.id.riderName);
+        mRiderPhone = findViewById(R.id.riderPhone);
+
 
 
 
@@ -466,6 +480,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     riderId = dataSnapshot.getValue().toString();
 
                     getAssignedRiderLocation();
+                    getAssignedRiderInfo();
 
                 }else{
                     // if the rider cancel the request, the following will happen:
@@ -484,6 +499,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     if (AssignedRiderLocationListener != null){
                         AssignedRiderLocationRef.removeEventListener(AssignedRiderLocationListener);
                     }
+
+                    // if we don't have a rider or we don't have a trip assigned we have to set the visisbility of (riderInfo) LinearLayout to (GONE)
+                    mRiderInfo.setVisibility(View.GONE);
 
 
                 }
@@ -535,6 +553,44 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
 
+    }
+
+
+    // this method will listen to the Rider info in the node users-->riders-->riserID, so it will retrieve rider info and populated into the (RiderSettingActivity)
+    private void getAssignedRiderInfo(){
+//        // firstly we have to change the visibility of riderInfo Linear Layout to (VISIBLE)
+//        mRiderInfo.setVisibility(View.VISIBLE);
+
+        DatabaseReference mRiderDatabase = FirebaseDatabase.getInstance().getReference().child("users").child("riders").child(riderId);
+        mRiderDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0){
+                    Map<String,Object> map = (Map<String,Object>) dataSnapshot.getValue();
+
+                    // firstly we have to change the visibility of riderInfo Linear Layout to (VISIBLE)
+                    mRiderInfo.setVisibility(View.VISIBLE);
+
+                    if(map.get("name") != null){
+                        mRiderName.setText(map.get("name").toString());
+                    }
+
+                    if(map.get("phone") != null){
+                        mRiderPhone.setText(map.get("phone").toString());
+                    }
+
+                    if(map.get("ProfileImageUrl") != null){
+                        Glide.with(getApplication()).load(map.get("ProfileImageUrl").toString()).into(mRiderPrfileImage);
+                    }
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 }
 
