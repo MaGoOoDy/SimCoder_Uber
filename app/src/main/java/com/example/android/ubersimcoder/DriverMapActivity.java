@@ -82,9 +82,12 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     private ImageView mRiderPrfileImage;
     private TextView mRiderName;
     private TextView mRiderPhone;
+    private TextView mRiderDestination;
     private Boolean currentLogoutDriverStatus = false;
     private String driverID;
     private String riderId = "";
+
+
     Marker RiderMarker;
 
 
@@ -115,6 +118,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         mRiderPrfileImage = findViewById(R.id.riderProfileImage);
         mRiderName = findViewById(R.id.riderName);
         mRiderPhone = findViewById(R.id.riderPhone);
+        mRiderDestination = findViewById(R.id.riderDestination);
 
 
 
@@ -183,7 +187,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                         newLatLng = new LatLng(location.getLatitude(), location.getLongitude());
 
                         mMap.moveCamera(CameraUpdateFactory.newLatLng(newLatLng));
-                        mMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+                        mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
 
                         Log.d(TAG, "onSuccess: Latitude = " + location.getLatitude());
                         Log.d(TAG, "onSuccess: Longitude = " + location.getLongitude());
@@ -237,10 +241,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
 
-
-
-
-
     private void startLocationUpdates() {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -258,10 +258,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     }
 
+
     private void stopLocationUpdates() {
         mFusedLocationProviderClient.removeLocationUpdates(mLocationCallback);
     }
-
 
 
     @Override
@@ -280,12 +280,12 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
 
-
     @Override
     protected void onPause() {
         super.onPause();
         stopLocationUpdates();
     }
+
 
     @Override
     protected void onStop() {
@@ -298,9 +298,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
     }
 
 
-
-
-
     private boolean checkMapServices(){
         if(isServicesOK()){
             if(isMapsEnabled()){
@@ -309,6 +306,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
         return false;
     }
+
 
     private void buildAlertMessageNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -324,6 +322,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         alert.show();
     }
 
+
     public boolean isMapsEnabled(){
         final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
 
@@ -333,6 +332,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
         return true;
     }
+
 
     private void getLocationPermission() {
         /*
@@ -353,6 +353,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
         }
     }
+
 
     public boolean isServicesOK(){
         Log.d(TAG, "isServicesOK: checking google services version");
@@ -375,6 +376,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         return false;
     }
 
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[],
@@ -392,6 +394,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         }
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -412,9 +415,6 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
         }
 
     }
-
-
-
 
 
     //this method will check if the driver is available ( not offline ) and send his location to
@@ -469,7 +469,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
 
     private void getAssignedRider() {
-        AssignedRiderRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverID).child("CustomerID");
+        AssignedRiderRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverID).child("CustomerRequest").child("CustomerID");
 
          AssignedRiderRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -481,6 +481,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
                     getAssignedRiderLocation();
                     getAssignedRiderInfo();
+                    getAssignedRiderDestination();
 
                 }else{
                     // if the rider cancel the request, the following will happen:
@@ -502,6 +503,10 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
                     // if we don't have a rider or we don't have a trip assigned we have to set the visisbility of (riderInfo) LinearLayout to (GONE)
                     mRiderInfo.setVisibility(View.GONE);
+                    mRiderName.setText("");
+                    mRiderPhone.setText("");
+                    mRiderDestination.setText("Destination: --");
+                    mRiderPrfileImage.setImageResource(R.drawable.default_user_profile);
 
 
                 }
@@ -513,6 +518,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
             }
         });
     }
+
 
     private void getAssignedRiderLocation() {
         AssignedRiderLocationRef = FirebaseDatabase.getInstance().getReference().child("Customer Requests").child(riderId).child("l");
@@ -584,6 +590,33 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     }
                 }
 
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+
+    private void getAssignedRiderDestination() {
+        AssignedRiderRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverID).child("CustomerRequest").child("Destination");
+
+        AssignedRiderRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()){
+
+                    // retrieving Rider ID from database
+                    String destination = dataSnapshot.getValue().toString();
+                    mRiderDestination.setText("Destination: " + destination);
+
+
+
+                }else{
+                    mRiderDestination.setText("Destination: --");
+                }
             }
 
             @Override

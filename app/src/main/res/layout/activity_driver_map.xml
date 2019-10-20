@@ -52,6 +52,13 @@
                 android:id="@+id/riderPhone"
                 android:paddingBottom="10sp"
                 android:paddingTop="20sp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/riderDestination"
+                android:paddingBottom="10sp"
+                android:paddingTop="20sp"
+                android:text="Destination: --"/>
         </LinearLayout>
 
 

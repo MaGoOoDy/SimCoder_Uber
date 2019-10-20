@@ -27,6 +27,7 @@ import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -41,6 +42,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -49,6 +55,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -89,6 +96,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
     private ArrayList<String> DriverFoundList = new ArrayList<String>();
     private Boolean currentLogoutRiderStatus = false;
     private String rider_id;
+    private String destination;
     Marker DriverMarker;
     private Marker RiderMarker;
     private Boolean requestBol = false;
@@ -120,6 +128,9 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         mapFragment.getMapAsync(this);
 
 
+
+
+        initializingPlacesAPI();
 
         // initiate the vars
         mLogout = findViewById(R.id.logout);
@@ -154,22 +165,24 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
                     requestBol = false;
 
-                    // removing Listnenres
+                    // removing Listeners
                     geoQuery.removeAllListeners();
                     DriverWorkingRef.removeEventListener(driverLocationRefListener);
+                    // TODO : in lecture 18, there i another Listener to be removed, if the app is not working properly check the lecture and remove the listener
+
 
 
                     // removing the RiderID from the (users -> drivers -> driverID ) node, this will happen by setting the node value to true.
                     if(driverFoundID != null){
-                        DriverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID);
+                        DriverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("CustomerRequest");
                         DriverRef.setValue(true);
                         driverFoundID = null;
                     }
 
-                    // setting driverFound variable to false, so we initiall assuming that we didn't assigned any driver.
+                    // setting driverFound variable to false, so we initially assuming that we didn't assigned any driver.
                     driverFound = false;
 
-                    // resetting the raduis to 1
+                    // resetting the radius to 1
                     radius = 1;
 
                     // clear everything happened because of the previous request
@@ -229,6 +242,33 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
 
 
+
+        // Sets up the autocomplete fragment to show place details when a place is selected.
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        // Specify the types of place data to return.
+        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+
+        // Set up a PlaceSelectionListener to handle the response.
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                // TODO: Get info about the selected place.
+                destination = place.getName();
+
+            }
+
+            @Override
+            public void onError(Status status) {
+                // TODO: Handle the error.
+                Log.i(TAG, "An error occurred: " + status);
+            }
+        });
+
+
+
+
     }
 
 
@@ -244,8 +284,6 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         }
         mMap.setMyLocationEnabled(true);
     }
-
-
 
 
     // in this method we receive the location updates
@@ -315,10 +353,6 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
     }
 
 
-
-
-
-
     private void startLocationUpdates() {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -336,10 +370,10 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
     }
 
+
     private void stopLocationUpdates() {
         mFusedLocationProviderClient.removeLocationUpdates(mLocationCallback);
     }
-
 
 
     @Override
@@ -358,12 +392,12 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
     }
 
 
-
     @Override
     protected void onPause() {
         super.onPause();
         stopLocationUpdates();
     }
+
 
     @Override
     protected void onStop() {
@@ -376,9 +410,6 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
     }
 
 
-
-
-
     private boolean checkMapServices(){
         if(isServicesOK()){
             if(isMapsEnabled()){
@@ -387,6 +418,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         }
         return false;
     }
+
 
     private void buildAlertMessageNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -402,6 +434,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         alert.show();
     }
 
+
     public boolean isMapsEnabled(){
         final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
 
@@ -411,6 +444,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         }
         return true;
     }
+
 
     private void getLocationPermission() {
         /*
@@ -431,6 +465,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
                     PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
         }
     }
+
 
     public boolean isServicesOK(){
         Log.d(TAG, "isServicesOK: checking google services version");
@@ -453,6 +488,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         return false;
     }
 
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[],
@@ -470,6 +506,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
             }
         }
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -490,6 +527,8 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         }
 
     }
+
+
     //this method will get the rider location and send his location to
     // the database, so when riders make a trip request the location of each available drivers will
     // be used to calculate the driver that need minimum time to reach to the rider.
@@ -556,9 +595,10 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
                     // TODO :   here we will add a method to store the 5 closest drivers, then we send request to these drivers based on their distance to the rider.
                     //          so if the driver accept the ride, we will send him the complete details for the rider and the trip
-                    DriverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID);
+                    DriverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("CustomerRequest");
                     HashMap driverMap = new HashMap();
                     driverMap.put("CustomerID",rider_id);
+                    driverMap.put("Destination",destination);
                     DriverRef.updateChildren(driverMap);
 
                     // TODO :   if the driver accept the trip, we will do the followings:
@@ -608,7 +648,6 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         });
 
     }
-
 
 
     private void gettingAssignedDriverLocation() {
@@ -695,5 +734,23 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
     }
 
 
+    private void initializingPlacesAPI(){
+
+        String apiKey = getString(R.string.google_maps_key);
+
+        if (apiKey.equals("")) {
+            Toast.makeText(this, getString(R.string.error_api_key), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Setup Places Client
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), apiKey);
+        }
+
+        // Create a new Places client instance.
+        PlacesClient placesClient = Places.createClient(this);
+
+    }
 
 }
