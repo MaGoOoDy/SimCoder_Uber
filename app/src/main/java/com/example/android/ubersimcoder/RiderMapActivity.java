@@ -13,6 +13,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -21,6 +24,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
+import com.bumptech.glide.Glide;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
@@ -58,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RiderMapActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -102,6 +107,11 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
     private Boolean requestBol = false;
     GeoQuery geoQuery;
     private ValueEventListener driverLocationRefListener;
+    private LinearLayout mDriverInfo;
+    private ImageView mDriverProfileImage;
+    private TextView mDriverName;
+    private TextView mDriverPhone;
+    private TextView mDriverCar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +146,12 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         mLogout = findViewById(R.id.logout);
         mSettings = findViewById(R.id.settings);
         mRequestRide = findViewById(R.id.CallDriver);
+
+        mDriverInfo = findViewById(R.id.driverInfo);
+        mDriverProfileImage = findViewById(R.id.driverProfileImage);
+        mDriverName = findViewById(R.id.driverName);
+        mDriverPhone = findViewById(R.id.driverPhone);
+        mDriverCar = findViewById(R.id.driverCar);
 
 
         // OnClickListener
@@ -175,7 +191,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
                     // removing the RiderID from the (users -> drivers -> driverID ) node, this will happen by setting the node value to true.
                     if(driverFoundID != null){
                         DriverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("CustomerRequest");
-                        DriverRef.setValue(true);
+                        DriverRef.removeValue();
                         driverFoundID = null;
                     }
 
@@ -202,6 +218,13 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 //                    }
 
                     mRequestRide.setText("request a ride");
+
+                    // if we don't have a driver or we don't have a trip assigned or trip is cancelled we have to set the visibility of (driverInfo) LinearLayout to (GONE) and clear all other nodes related to the trip
+                    mDriverInfo.setVisibility(View.GONE);
+                    mDriverName.setText("");
+                    mDriverPhone.setText("");
+                    mDriverCar.setText("");
+                    mDriverProfileImage.setImageResource(R.drawable.default_user_profile);
 
                 }else{
                     // if the the request is not cancelled, we can make a new request.
@@ -614,6 +637,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
 
                     gettingAssignedDriverLocation();
+                    getDriverInfo();
 
 
                 }
@@ -752,5 +776,47 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         PlacesClient placesClient = Places.createClient(this);
 
     }
+
+
+
+    private void getDriverInfo(){
+//        // firstly we have to change the visibility of riderInfo Linear Layout to (VISIBLE)
+//        mRiderInfo.setVisibility(View.VISIBLE);
+
+        DatabaseReference mRiderDatabase = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID);
+        mRiderDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0){
+                    Map<String,Object> map = (Map<String,Object>) dataSnapshot.getValue();
+
+                    // firstly we have to change the visibility of riderInfo Linear Layout to (VISIBLE)
+                    mDriverInfo.setVisibility(View.VISIBLE);
+
+                    if(map.get("name") != null){
+                        mDriverName.setText(map.get("name").toString());
+                    }
+
+                    if(map.get("phone") != null){
+                        mDriverPhone.setText(map.get("phone").toString());
+                    }
+                    if(map.get("car") != null){
+                        mDriverCar.setText(map.get("car").toString());
+                    }
+
+                    if(map.get("ProfileImageUrl") != null){
+                        Glide.with(getApplication()).load(map.get("ProfileImageUrl").toString()).into(mDriverProfileImage);
+                    }
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
 
 }

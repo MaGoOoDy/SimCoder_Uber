@@ -6,11 +6,18 @@
     android:layout_height="match_parent"
     tools:context=".DriverMapActivity">
 
-<Button
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:id="@+id/logout"
-    android:text="logout"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/logout"
+        android:text="logout"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/settings"
+        android:text="settings"
+        android:layout_gravity="end"
+        />
 
 
     <fragment

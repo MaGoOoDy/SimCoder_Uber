@@ -78,8 +78,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
     // vars 2
     private Button mLogout;
+    private Button mSettings;
     private LinearLayout mRiderInfo;
-    private ImageView mRiderPrfileImage;
+    private ImageView mRiderProfileImage;
     private TextView mRiderName;
     private TextView mRiderPhone;
     private TextView mRiderDestination;
@@ -114,8 +115,9 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
 
         // initiate the vars
         mLogout = findViewById(R.id.logout);
+        mSettings = findViewById(R.id.settings);
         mRiderInfo = findViewById(R.id.riderInfo);
-        mRiderPrfileImage = findViewById(R.id.riderProfileImage);
+        mRiderProfileImage = findViewById(R.id.riderProfileImage);
         mRiderName = findViewById(R.id.riderName);
         mRiderPhone = findViewById(R.id.riderPhone);
         mRiderDestination = findViewById(R.id.riderDestination);
@@ -138,6 +140,17 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
                 finish();
+                return;
+            }
+        });
+
+        mSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(DriverMapActivity.this,DriverSettingsActivity.class);
+//                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+
                 return;
             }
         });
@@ -506,7 +519,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     mRiderName.setText("");
                     mRiderPhone.setText("");
                     mRiderDestination.setText("Destination: --");
-                    mRiderPrfileImage.setImageResource(R.drawable.default_user_profile);
+                    mRiderProfileImage.setImageResource(R.drawable.default_user_profile);
 
 
                 }
@@ -586,7 +599,7 @@ public class DriverMapActivity extends FragmentActivity implements OnMapReadyCal
                     }
 
                     if(map.get("ProfileImageUrl") != null){
-                        Glide.with(getApplication()).load(map.get("ProfileImageUrl").toString()).into(mRiderPrfileImage);
+                        Glide.with(getApplication()).load(map.get("ProfileImageUrl").toString()).into(mRiderProfileImage);
                     }
                 }
 

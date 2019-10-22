@@ -35,47 +35,49 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RiderSettingsActivity extends AppCompatActivity {
+public class DriverSettingsActivity extends AppCompatActivity {
 
-    private EditText mNameField, mPhoneField;
+    private EditText mNameField, mPhoneField, mCarField;
     private Button mBack, mConfirm;
     private ImageView mProfileImage;
 
     private Uri resultUri;
 
     private FirebaseAuth mAuth;
-    private DatabaseReference mRiderDatabase;
+    private DatabaseReference mDriverDatabase;
 
-    private String riderID;
+    private String driverID;
     private String mName;
     private String mPhone;
     private String mProfileImageUrl;
+    private String mCar;
     private String TAG;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_rider_settings);
+        setContentView(R.layout.activity_driver_settings);
 
         mNameField = findViewById(R.id.name);
         mPhoneField = findViewById(R.id.phone);
+        mCarField = findViewById(R.id.car);
         mBack = findViewById(R.id.back);
         mConfirm = findViewById(R.id.confirm);
         mProfileImage = findViewById(R.id.profileImage);
 
         mAuth = FirebaseAuth.getInstance();
-        riderID = mAuth.getCurrentUser().getUid();
+        driverID = mAuth.getCurrentUser().getUid();
 
-        mRiderDatabase = FirebaseDatabase.getInstance().getReference().child("users").child("riders").child(riderID);
+        mDriverDatabase = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverID);
 
         // this function should come after the declaration of (mRiderDatabase)
         // this method will retrieve the rider info from database
-        getRiderInfo();
+        getDriverInfo();
 
         mConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                saveRiderInformation();
+                saveDriverInformation();
             }
         });
 
@@ -103,8 +105,8 @@ public class RiderSettingsActivity extends AppCompatActivity {
 
 
     // this method will listen to the Rider info in the node users-->riders-->riserID, so it will retrieve rider info and populated into the (RiderSettingActivity)
-    private void getRiderInfo(){
-        mRiderDatabase.addValueEventListener(new ValueEventListener() {
+    private void getDriverInfo(){
+        mDriverDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0){
@@ -118,6 +120,10 @@ public class RiderSettingsActivity extends AppCompatActivity {
                     if(map.get("phone") != null){
                         mPhone = map.get("phone").toString();
                         mPhoneField.setText(mPhone);
+                    }
+                    if(map.get("car") != null){
+                        mCar = map.get("car").toString();
+                        mCarField.setText(mCar);
                     }
 
                     if(map.get("ProfileImageUrl") != null){
@@ -136,18 +142,20 @@ public class RiderSettingsActivity extends AppCompatActivity {
     }
 
 
-    private void saveRiderInformation(){
+    private void saveDriverInformation(){
         mName = mNameField.getText().toString();
         mPhone = mPhoneField.getText().toString();
+        mCar = mCarField.getText().toString();
 
-        Map riderInfo = new HashMap();
-        riderInfo.put("name", mName);
-        riderInfo.put("phone", mPhone);
-        mRiderDatabase.updateChildren(riderInfo);
+        Map driverInfo = new HashMap();
+        driverInfo.put("name", mName);
+        driverInfo.put("phone", mPhone);
+        driverInfo.put("car", mCar);
+        mDriverDatabase.updateChildren(driverInfo);
 
         // saving the profile image
         if(resultUri != null) {
-            StorageReference imagePath = FirebaseStorage.getInstance().getReference().child("profile_images").child("riders").child(riderID);
+            StorageReference imagePath = FirebaseStorage.getInstance().getReference().child("profile_images").child("drivers").child(driverID);
 
             Bitmap bitmap = null;
             try {
@@ -174,7 +182,7 @@ public class RiderSettingsActivity extends AppCompatActivity {
             });
 
 
-            // listening to the Storage node, if the image stored successfully in Firebase Storage we will save the Image Url into Firebase Database node (users --> riders --> riderID --> profileImageUrl)
+            // listening to the Storage node, if the image stored successfully in Firebase Storage we will save the Image Url into Firebase Database node (users --> drivers --> driverID --> profileImageUrl)
             uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -188,7 +196,7 @@ public class RiderSettingsActivity extends AppCompatActivity {
 
                     Map newImage = new HashMap();
                     newImage.put("ProfileImageUrl", imageURL);
-                    mRiderDatabase.updateChildren(newImage);
+                    mDriverDatabase.updateChildren(newImage);
 
                     // after successfully updating the node (), we will finish the activity.
                     finish();

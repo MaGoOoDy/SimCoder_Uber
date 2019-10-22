@@ -82,8 +82,8 @@ public class DriverLoginActivity extends AppCompatActivity implements View.OnCli
                         }else{
 
                             String user_id = mAuth.getCurrentUser().getUid();
-                            DatabaseReference current_user_db = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(user_id);
-                            current_user_db.setValue(true);
+                            DatabaseReference current_user_db = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(user_id).child("nameeee");
+                            current_user_db.setValue(email);
 
 
                         }
