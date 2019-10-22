@@ -15,6 +15,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -102,6 +104,7 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
     private Boolean currentLogoutRiderStatus = false;
     private String rider_id;
     private String destination;
+    private String requestService;
     Marker DriverMarker;
     private Marker RiderMarker;
     private Boolean requestBol = false;
@@ -112,6 +115,8 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
     private TextView mDriverName;
     private TextView mDriverPhone;
     private TextView mDriverCar;
+    private RadioGroup mRadioGroup;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -153,6 +158,10 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
         mDriverPhone = findViewById(R.id.driverPhone);
         mDriverCar = findViewById(R.id.driverCar);
 
+
+        // make UberX is the default option for the riders
+        mRadioGroup = findViewById(R.id.radioGroup);
+        mRadioGroup.check(R.id.UberX);
 
         // OnClickListener
         mLogout.setOnClickListener(new View.OnClickListener() {
@@ -228,6 +237,15 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
                 }else{
                     // if the the request is not cancelled, we can make a new request.
+
+                    // Service Type
+                    int selectId = mRadioGroup.getCheckedRadioButtonId();
+                    final RadioButton radioButton = findViewById(selectId);
+                    if(radioButton.getText() == null) {
+                        return;
+                    }
+                    requestService = radioButton.getText().toString();
+
 
                     requestBol = true;
                     pickupLocation = new LatLng(newLatLng.latitude, newLatLng.longitude);
@@ -612,33 +630,51 @@ public class RiderMapActivity extends FragmentActivity implements OnMapReadyCall
 
 
                 if(!driverFound && requestBol){
-                    driverFound = true;
-                    driverFoundID = key;
+                    DatabaseReference mRiderDatabase = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(key);
+
+                    mRiderDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0 ){
+                                Map<String,Object> driverMap = (Map<String,Object>) dataSnapshot.getValue();
+                                if(driverFound){
+                                    return;
+                                }
 
 
-                    // TODO :   here we will add a method to store the 5 closest drivers, then we send request to these drivers based on their distance to the rider.
-                    //          so if the driver accept the ride, we will send him the complete details for the rider and the trip
-                    DriverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("CustomerRequest");
-                    HashMap driverMap = new HashMap();
-                    driverMap.put("CustomerID",rider_id);
-                    driverMap.put("Destination",destination);
-                    DriverRef.updateChildren(driverMap);
+                                // TODO :   here we have o complete the code to inspect other type of services (UberXL, UberBlack)
+                                if(driverMap.get("service").equals(requestService)){
+                                    driverFound = true;
+                                    driverFoundID = dataSnapshot.getKey();
 
-                    // TODO :   if the driver accept the trip, we will do the followings:
-                    //          1- notify the rider with the driver details
-                    //          2- show the the rider the ability to massage the driver
-                    //          3- if the driver arrived to the rider location, the following will happen:
-                    //                  - the rider will be notified that hte driver is arrived.
-                    //                  - the (show up) timer will start
-                    //                  - a button will appear to both of them to allow them call each other.
+                                    // TODO :   here we will add a method to store the 5 closest drivers, then we send request to these drivers based on their distance to the rider.
+                                    //          so if the driver accept the ride, we will send him the complete details for the rider and the trip
+                                    DriverRef = FirebaseDatabase.getInstance().getReference().child("users").child("drivers").child(driverFoundID).child("CustomerRequest");
+                                    HashMap map = new HashMap();
+                                    map.put("CustomerID",rider_id);
+                                    map.put("Destination",destination);
+                                    DriverRef.updateChildren(map);
 
+                                    // TODO :   if the driver accept the trip, we will do the followings:
+                                    //          1- notify the rider with the driver details
+                                    //          2- show the the rider the ability to massage the driver
+                                    //          3- if the driver arrived to the rider location, the following will happen:
+                                    //                  - the rider will be notified that hte driver is arrived.
+                                    //                  - the (show up) timer will start
+                                    //                  - a button will appear to both of them to allow them call each other.
 
-                    mRequestRide.setText("getting driver details ...");
+                                    gettingAssignedDriverLocation();
+                                    getDriverInfo();
+                                    mRequestRide.setText("getting driver details ...");
+                                }
+                            }
+                        }
 
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                    gettingAssignedDriverLocation();
-                    getDriverInfo();
-
+                        }
+                    });
 
                 }
 

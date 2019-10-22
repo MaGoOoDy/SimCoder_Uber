@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -51,7 +53,9 @@ public class DriverSettingsActivity extends AppCompatActivity {
     private String mPhone;
     private String mProfileImageUrl;
     private String mCar;
+    private String mService;
     private String TAG;
+    private RadioGroup mRadioGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +68,8 @@ public class DriverSettingsActivity extends AppCompatActivity {
         mBack = findViewById(R.id.back);
         mConfirm = findViewById(R.id.confirm);
         mProfileImage = findViewById(R.id.profileImage);
+        mRadioGroup = findViewById(R.id.radioGroup);
+
 
         mAuth = FirebaseAuth.getInstance();
         driverID = mAuth.getCurrentUser().getUid();
@@ -125,6 +131,20 @@ public class DriverSettingsActivity extends AppCompatActivity {
                         mCar = map.get("car").toString();
                         mCarField.setText(mCar);
                     }
+                    if(map.get("service") != null){
+                        mService = map.get("service").toString();
+                        switch (mService){
+                            case "UberX":
+                                mRadioGroup.check(R.id.UberX);
+                                break;
+                            case "UberBlack":
+                                mRadioGroup.check(R.id.UberBlack);
+                                break;
+                            case "UberXL":
+                                mRadioGroup.check(R.id.UberXL);
+                                break;
+                        }
+                    }
 
                     if(map.get("ProfileImageUrl") != null){
                         mProfileImageUrl = map.get("ProfileImageUrl").toString();
@@ -147,10 +167,20 @@ public class DriverSettingsActivity extends AppCompatActivity {
         mPhone = mPhoneField.getText().toString();
         mCar = mCarField.getText().toString();
 
+        // Service Type
+        int selectId = mRadioGroup.getCheckedRadioButtonId();
+        final RadioButton radioButton = findViewById(selectId);
+        if(radioButton.getText() == null) {
+            return;
+        }
+
+        mService = radioButton.getText().toString();
+
         Map driverInfo = new HashMap();
         driverInfo.put("name", mName);
         driverInfo.put("phone", mPhone);
         driverInfo.put("car", mCar);
+        driverInfo.put("service", mService);
         mDriverDatabase.updateChildren(driverInfo);
 
         // saving the profile image
